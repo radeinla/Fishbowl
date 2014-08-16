@@ -9,6 +9,7 @@
     tools:context=".Sell">
 
     <RelativeLayout
+        android:id="@+id/sale"
         android:layout_width="240dp"
         android:layout_height="240dp"
         android:layout_centerInParent="true"

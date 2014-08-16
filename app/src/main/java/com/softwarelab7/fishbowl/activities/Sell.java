@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import com.softwarelab7.fishbowl.R;
@@ -11,15 +12,17 @@ import com.softwarelab7.fishbowl.models.Sale;
 import com.softwarelab7.fishbowl.models.Session;
 import com.softwarelab7.fishbowl.sqlite.DbHelper;
 
+import java.util.Date;
+
 
 public class Sell extends Activity {
 
     DbHelper dbHelper;
     Session activeSession;
     long sold = 0;
-    String location;
-    Double lat = null;
-    Double lon = null;
+    String location = "UP Diliman";
+    Double lat = 14.6549;
+    Double lon = 121.0645;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +30,13 @@ public class Sell extends Activity {
         dbHelper = new DbHelper(getApplicationContext());
         setContentView(R.layout.activity_sell);
         initializeContentView();
+        findViewById(R.id.sale).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                increaseSoldCount();
+                dbHelper.insert(createSale());
+            }
+        });
     }
 
     @Override
@@ -55,17 +65,30 @@ public class Sell extends Activity {
 
     private void setLocation(String location) {
         this.location = location;
+        ((TextView)findViewById(R.id.location)).setText(location);
     }
 
     private void initializeContentView() {
         activeSession = dbHelper.getLatestSession();
         setSold(dbHelper.getSoldForSession(activeSession));
         Sale latestTransaction = dbHelper.getLatestTransaction();
-        if (latestTransaction == null) {
-            setLocation("Location");
-        } else {
+        if (latestTransaction != null) {
             setLocation(latestTransaction.location);
         }
+    }
+
+    private Sale createSale() {
+        Sale sale = new Sale();
+        sale.lat = lat;
+        sale.lon = lon;
+        sale.location = location;
+        sale.session = activeSession.id;
+        sale.dateCreated = new Date();
+        return sale;
+    }
+
+    private void increaseSoldCount() {
+        setSold(sold+1);
     }
 
 }
