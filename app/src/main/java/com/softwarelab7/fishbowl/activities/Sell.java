@@ -67,6 +67,8 @@ public class Sell extends Activity implements
     DbHelper dbHelper;
     Session activeSession;
     long sold = 0;
+    int stops = 0;
+    int soldToday = 0;
     String location;
     Double lat = 14.6549;
     Double lon = 121.0645;
@@ -233,12 +235,24 @@ public class Sell extends Activity implements
             setCoordinates(latestTransaction.lat, latestTransaction.lon);
         }
         setSold(dbHelper.getSoldForSession(activeSession));
+        setSoldToday(0);
+        setStops(0);
         setDate(new Date());
         suggestionToasterTimer = new Timer();
         suggestionToaster = new SuggestLocationToasterTimerTask();
         suggestionToaster.location = getCurrentLocation();
         suggestionToaster.date = new Date();
         suggestionToasterTimer.schedule(suggestionToaster, 0, SUGGESTION_PERIOD);
+    }
+
+    void setStops(int stops) {
+        this.stops = stops;
+        ((TextView)findViewById(R.id.stops)).setText(Long.toString(stops));
+    }
+
+    void setSoldToday(int soldToday) {
+        this.soldToday = soldToday;
+        ((TextView)findViewById(R.id.soldToday)).setText(Long.toString(soldToday));
     }
 
     private class SuggestLocationToasterTimerTask extends TimerTask {
@@ -281,6 +295,7 @@ public class Sell extends Activity implements
 
     private void increaseSoldCount() {
         setSold(sold+1);
+        setSoldToday(soldToday+1);
     }
 
     @Override
@@ -367,6 +382,7 @@ public class Sell extends Activity implements
         Toast.makeText(this, "You have moved, creating new session!", Toast.LENGTH_SHORT).show();
         if (location.distanceTo(getCurrentLocation()) > LOCATION_CHANGE_THRESHOLD) {
             closeCurrentSession();
+            setStops(stops+1);
             setCoordinates(location.getLatitude(), location.getLongitude());
         }
     }
