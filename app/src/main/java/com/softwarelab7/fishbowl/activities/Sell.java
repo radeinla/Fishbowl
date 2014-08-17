@@ -82,7 +82,6 @@ public class Sell extends Activity implements
         setContentView(R.layout.activity_sell);
         dbHelper = new DbHelper(getApplicationContext());
         mLocationClient = new LocationClient(this, this, this);
-        initializeContentView();
         findViewById(R.id.sale).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -90,6 +89,7 @@ public class Sell extends Activity implements
                 dbHelper.insert(createSale());
             }
         });
+        initializeContentView();
     }
 
     @Override
