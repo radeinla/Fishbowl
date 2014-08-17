@@ -8,5 +8,8 @@
     <string name="sold_in_label">Total sold in %1$s</string>
     <string name="sold_today_label">Total sold today</string>
     <string name="stops_label">Selling stops today</string>
-    <string name="new_location_suggestion">Suggestion: Go to %1$s for your next stop.</string>
+    <string name="new_location_suggestion_toast">Suggestion: Go to %1$s for your next stop.</string>
+    <string name="new_location_suggestion_label">SUGGESTION</string>
+    <string name="new_location_suggestion_text">Go to %1$s for your next stop.</string>
+    <string name="new_location_no_suggestion_text">No suggestions yet.</string>
 </resources>

@@ -123,19 +123,36 @@
         </RelativeLayout>
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:layout_alignParentBottom="true"
         android:background="#38acd8">
 
         <ImageView
+            android:id="@+id/location_marker_icon"
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:src="@drawable/marker"
             android:scaleType="fitCenter">
         </ImageView>
 
-    </LinearLayout>
+        <TextView
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/new_location_suggestion_label"
+            android:id="@+id/suggestion_label" />
+
+        <TextView
+            android:layout_below="@+id/suggestion_label"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/new_location_no_suggestion_text"
+            android:id="@+id/suggestion" />
+
+    </RelativeLayout>
 
 </RelativeLayout>

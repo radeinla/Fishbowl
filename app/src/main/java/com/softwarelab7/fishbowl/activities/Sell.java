@@ -54,6 +54,8 @@ public class Sell extends Activity implements
 
     private static long LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.MINUTES.toMillis(5);
 
+    private static long SUGGESTION_PERIOD = TimeUnit.MINUTES.toMillis(10);
+
     private final static int
             CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
 
@@ -236,7 +238,7 @@ public class Sell extends Activity implements
         suggestionToaster = new SuggestLocationToasterTimerTask();
         suggestionToaster.location = getCurrentLocation();
         suggestionToaster.date = new Date();
-        suggestionToasterTimer.schedule(suggestionToaster, 0, TimeUnit.SECONDS.toMillis(10));
+        suggestionToasterTimer.schedule(suggestionToaster, 0, SUGGESTION_PERIOD);
     }
 
     private class SuggestLocationToasterTimerTask extends TimerTask {
@@ -245,15 +247,19 @@ public class Sell extends Activity implements
 
         @Override
         public void run() {
-            Location suggestedLocation = extractNextLocation(date, location);
+            final Location suggestedLocation = extractNextLocation(date, location);
             if (suggestedLocation != null) {
                 final String suggestedLocationName = getLocationFromAddress(getAddress(suggestedLocation));
                 Sell.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(Sell.this,
-                                Sell.this.getString(R.string.new_location_suggestion, suggestedLocationName),
-                                Toast.LENGTH_LONG).show();
+//                        Toast.makeText(Sell.this,
+//                                Sell.this.getString(R.string.new_location_suggestion_toast, suggestedLocationName),
+//                                Toast.LENGTH_LONG).show();
+                        TextView suggestionTextView = (TextView) Sell.this.findViewById(R.id.suggestion);
+                        String suggestion = Sell.this.getString(R.string.new_location_suggestion_text,
+                                suggestedLocationName);
+                        suggestionTextView.setText(suggestion);
                     }
                 });
             }
@@ -341,6 +347,11 @@ public class Sell extends Activity implements
     protected void onStart() {
         super.onStart();
         mLocationClient.connect();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         initializeContentView();
     }
 
