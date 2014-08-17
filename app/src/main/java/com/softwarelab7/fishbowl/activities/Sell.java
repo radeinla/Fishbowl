@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.sql.Time;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 
@@ -67,6 +69,9 @@ public class Sell extends Activity implements
     Double lat = 14.6549;
     Double lon = 121.0645;
     AsyncTask<Location,Void,Address> lastAsyncAddressTask;
+
+    Timer suggestionToasterTimer;
+    SuggestLocationToasterTimerTask suggestionToaster;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -227,7 +232,32 @@ public class Sell extends Activity implements
         }
         setSold(dbHelper.getSoldForSession(activeSession));
         setDate(new Date());
-        Log.d(TAG, "New location: " + LocationUtils.toCoordinateString(extractNextLocation(this.date, getCurrentLocation())));
+        suggestionToasterTimer = new Timer();
+        suggestionToaster = new SuggestLocationToasterTimerTask();
+        suggestionToaster.location = getCurrentLocation();
+        suggestionToaster.date = new Date();
+        suggestionToasterTimer.schedule(suggestionToaster, 0, TimeUnit.SECONDS.toMillis(10));
+    }
+
+    private class SuggestLocationToasterTimerTask extends TimerTask {
+        Location location;
+        Date date;
+
+        @Override
+        public void run() {
+            Location suggestedLocation = extractNextLocation(date, location);
+            if (suggestedLocation != null) {
+                final String suggestedLocationName = getLocationFromAddress(getAddress(suggestedLocation));
+                Sell.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(Sell.this,
+                                Sell.this.getString(R.string.new_location_suggestion, suggestedLocationName),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        }
     }
 
     private void setCoordinates(double lat, double lon) {
@@ -311,10 +341,12 @@ public class Sell extends Activity implements
     protected void onStart() {
         super.onStart();
         mLocationClient.connect();
+        initializeContentView();
     }
 
     @Override
     protected void onStop() {
+        suggestionToasterTimer.cancel();
         if (mLocationClient.isConnected()) {
             mLocationClient.removeLocationUpdates(this);
         }
