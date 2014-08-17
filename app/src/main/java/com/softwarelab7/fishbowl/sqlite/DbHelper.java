@@ -17,7 +17,7 @@ import java.util.Locale;
 /**
  */
 public class DbHelper extends SQLiteOpenHelper {
-    public static final int DATABASE_VERSION = 3;
+    public static final int DATABASE_VERSION = 4;
     public static final String DATABASE_NAME = "Fishbowl.db";
 
     private SQLiteDatabase db;
@@ -63,11 +63,14 @@ public class DbHelper extends SQLiteOpenHelper {
         if (cursor.isAfterLast()) {
             Session session = new Session();
             session.active = true;
+            session.dateCreated = new Date();
             session.id = insert(session);
             return session;
         } else {
             cursor.moveToFirst();
-            return Schema.Session.toSession(cursor);
+            Session session = Schema.Session.toSession(cursor);
+            session.dateCreated = new Date();
+            return session;
         }
     }
 
@@ -87,6 +90,38 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery("select count(" + Schema.Sale._ID + ") " +
                         "from " + Schema.Sale.TABLE_NAME + " " +
                         "where " + Schema.Sale.COLUMN_NAME_SESSION + " = " + session.id + ";",
+                null
+        );
+        cursor.moveToFirst();
+        return cursor.getLong(0);
+    }
+
+
+    public long getSoldForToday(Date date) {
+        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Cursor cursor = db.rawQuery("select count(" + Schema.Sale._ID + ") " +
+                        "from " + Schema.Sale.TABLE_NAME + " " +
+                        "where " + Schema.Sale.COLUMN_NAME_TIMESTAMP + " >= " + calendar.getTime().getTime() + ";",
+                null
+        );
+        cursor.moveToFirst();
+        return cursor.getLong(0);
+    }
+
+
+    public long getStopsForToday(Date date) {
+        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Cursor cursor = db.rawQuery("select count(" + Schema.Sale._ID + ") " +
+                        "from " + Schema.Session.TABLE_NAME + " " +
+                        "where " + Schema.Session.COLUMN_NAME_DATE_CREATED + " >= " + calendar.getTime().getTime() + ";",
                 null
         );
         cursor.moveToFirst();
