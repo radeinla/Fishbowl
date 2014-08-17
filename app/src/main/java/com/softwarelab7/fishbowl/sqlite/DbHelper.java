@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  */
@@ -141,10 +142,12 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public List <com.softwarelab7.fishbowl.models.Sale> getPastSales() {
         Calendar calendar = Calendar.getInstance(Locale.getDefault());
-        calendar.set(Calendar.MILLISECOND, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
+//        calendar.set(Calendar.MILLISECOND, 0);
+//        calendar.set(Calendar.SECOND, 0);
+//        calendar.set(Calendar.MINUTE, 0);
+//        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        Date tmb = new Date(new Date().getTime()- TimeUnit.MINUTES.toMillis(30));
+        calendar.setTime(tmb);
 
         Cursor cursor = db.rawQuery("select * " +
                         "from " + Schema.Sale.TABLE_NAME + " " +

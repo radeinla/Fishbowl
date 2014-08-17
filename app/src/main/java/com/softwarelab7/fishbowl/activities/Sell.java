@@ -50,11 +50,11 @@ public class Sell extends Activity implements
 
     private static float LOCATION_CHANGE_THRESHOLD = 30.0f;
 
-    private static long LOCATION_CHANGE_INTERVAL = TimeUnit.MINUTES.toMillis(5);
+    private static long LOCATION_CHANGE_INTERVAL = TimeUnit.MINUTES.toMillis(2);
 
-    private static long LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.MINUTES.toMillis(5);
+    private static long LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.MINUTES.toMillis(2);
 
-    private static long SUGGESTION_PERIOD = TimeUnit.MINUTES.toMillis(10);
+    private static long SUGGESTION_PERIOD = TimeUnit.MINUTES.toMillis(15);
 
     private final static int
             CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -305,9 +305,9 @@ public class Sell extends Activity implements
         if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS) {
 
             //uncomment when debugging
-            LOCATION_CHANGE_THRESHOLD = 5.0f; // 5 meters
-            LOCATION_CHANGE_INTERVAL = TimeUnit.SECONDS.toMillis(2); // actively check for location updates every 2 minutes
-            LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.SECONDS.toMillis(2); // fastest interval is 2 minutes
+//            LOCATION_CHANGE_THRESHOLD = 5.0f; // 5 meters
+//            LOCATION_CHANGE_INTERVAL = TimeUnit.SECONDS.toMillis(2); // actively check for location updates every 2 minutes
+//            LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.SECONDS.toMillis(2); // fastest interval is 2 minutes
 
             LocationRequest locationRequest = LocationRequest.create()
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -385,6 +385,7 @@ public class Sell extends Activity implements
             closeCurrentSession();
             setStops(stops+1);
             setCoordinates(location.getLatitude(), location.getLongitude());
+            suggestionToasterTimer.schedule(new SuggestLocationToasterTimerTask(), 0);
         }
     }
 
