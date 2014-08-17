@@ -26,6 +26,7 @@ import com.softwarelab7.fishbowl.sqlite.DbHelper;
 
 import java.io.IOException;
 import java.sql.Time;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -50,10 +51,11 @@ public class Sell extends Activity implements
 
     private LocationClient mLocationClient;
 
+    Date date;
     DbHelper dbHelper;
     Session activeSession;
     long sold = 0;
-    String location = "UP Diliman";
+    String location;
     Double lat = 14.6549;
     Double lon = 121.0645;
     AsyncTask<Location,Void,Address> lastAsyncAddressTask;
@@ -108,18 +110,23 @@ public class Sell extends Activity implements
         activeSession = dbHelper.getLatestSession();
         Sale latestTransaction = dbHelper.getLatestTransaction();
         if (latestTransaction != null) {
-            lat = latestTransaction.lat;
-            lon = latestTransaction.lon;
-            setLocation(latestTransaction.location);
+            setCoordinates(latestTransaction.lat, latestTransaction.lon);
         }
         setSold(dbHelper.getSoldForSession(activeSession));
+        setDate(new Date());
+    }
+
+    private void setCoordinates(double lat, double lon) {
+        this.lat = lat;
+        this.lon = lon;
+        Log.d(TAG, "Current location: " + getCoordinateString());
+        triggerUpdateLocationTask();
     }
 
     private Sale createSale() {
         Sale sale = new Sale();
         sale.lat = lat;
         sale.lon = lon;
-        sale.location = location;
         sale.session = activeSession.id;
         sale.dateCreated = new Date();
         return sale;
@@ -136,8 +143,8 @@ public class Sell extends Activity implements
 
             //uncomment when debugging
             LOCATION_CHANGE_THRESHOLD = 5.0f; // 5 meters
-            LOCATION_CHANGE_INTERVAL = TimeUnit.SECONDS.toMillis(30); // actively check for location updates every 2 minutes
-            LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.SECONDS.toMillis(30); // fastest interval is 2 minutes
+            LOCATION_CHANGE_INTERVAL = TimeUnit.SECONDS.toMillis(2); // actively check for location updates every 2 minutes
+            LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.SECONDS.toMillis(2); // fastest interval is 2 minutes
 
             LocationRequest locationRequest = LocationRequest.create()
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -159,12 +166,13 @@ public class Sell extends Activity implements
 
     @Override
     public void onDisconnected() {
+        Toast.makeText(this, "GPS not available. Please install GooglePlayServices and enable GPS.", Toast.LENGTH_LONG).show();
         Log.d(TAG, "GooPS disconnected!");
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        Toast.makeText(this, "GPS not available. Please install GooglePlayServices and enable GPS.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "GPS not available. Please install GooglePlayServices and enable GPS.", Toast.LENGTH_LONG).show();
         Log.d(TAG, "Was not able to connect to google play services");
         if (connectionResult.hasResolution()) {
             try {
@@ -205,27 +213,30 @@ public class Sell extends Activity implements
         Log.d(TAG, "Location changed!!!!!");
         Toast.makeText(this, "You have moved, creating new session!", Toast.LENGTH_SHORT).show();
         if (location.distanceTo(getCurrentLocation()) > LOCATION_CHANGE_THRESHOLD) {
-            lat = location.getLatitude();
-            lon = location.getLongitude();
-            setLocation("Updating Location..");
-            if (lastAsyncAddressTask != null) {
-                lastAsyncAddressTask.cancel(true);
-            }
-            lastAsyncAddressTask = new AsyncTask<Location,Void,Address>() {
-                @Override
-                protected void onPostExecute(Address address) {
-                    setLocation(getLocationFromAddress(address));
-                }
-
-                @Override
-                protected Address doInBackground(Location... params) {
-                    return getAddress(params[0]);
-                }
-            };
-            lastAsyncAddressTask.execute(location);
-            activeSession = dbHelper.closeCurrentSession(activeSession);
-            setSold(0);
+            closeCurrentSession();
+            setCoordinates(location.getLatitude(), location.getLongitude());
         }
+    }
+
+    private void triggerUpdateLocationTask() {
+        setLocation(getString(R.string.location_updating_label));
+        if (lastAsyncAddressTask != null) {
+            lastAsyncAddressTask.cancel(true);
+        }
+        lastAsyncAddressTask = new AsyncTask<Location,Void,Address>() {
+            @Override
+            protected void onPostExecute(Address address) {
+                setLocation(getLocationFromAddress(address));
+            }
+
+            @Override
+            protected Address doInBackground(Location... params) {
+                Location location = params[0];
+                Log.d(TAG, "async task got location: " + location.getLatitude() + ", " + location.getLongitude());
+                return getAddress(params[0]);
+            }
+        };
+        lastAsyncAddressTask.execute(getCurrentLocation());
     }
 
     private String getLocationFromAddress(Address address) {
@@ -250,12 +261,14 @@ public class Sell extends Activity implements
 
     private Location getCurrentLocation() {
         Location location = new Location(Sell.class.getSimpleName());
+        Log.d(TAG, "Current location: " + getCoordinateString());
         location.setLatitude(lat);
-        location.setLatitude(lon);
+        location.setLongitude(lon);
         return location;
     }
 
     private Address getAddress(Location location) {
+        Log.d(TAG, "async task geocode got location: " + location.getLatitude() + ", " + location.getLongitude());
         try {
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
             List<Address> addressList = geocoder.getFromLocation(
@@ -272,6 +285,39 @@ public class Sell extends Activity implements
             Log.d(TAG, "Received ioException from geocoding: " + ioException.getMessage(), ioException);
             return null;
         }
+    }
+
+    private void setDate(Date date) {
+        if (this.date == null) {
+            closeCurrentSession();
+        } else {
+            Date previous = getDateOnly(this.date);
+            Date current = getDateOnly(date);
+            if (getDateOnly(current).after(previous)) {
+                closeCurrentSession();
+            }
+        }
+        this.date = date;
+    }
+
+    private void closeCurrentSession() {
+        activeSession = dbHelper.closeCurrentSession(activeSession);
+        setSold(0);
+    }
+
+    private Date getDateOnly(Date date) {
+        Calendar calendar = getCalendar(date);
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        return calendar.getTime();
+    }
+
+    private Calendar getCalendar(Date date) {
+        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        calendar.setTime(date);
+        return calendar;
     }
 
 }

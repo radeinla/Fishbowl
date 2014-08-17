@@ -10,7 +10,7 @@ import com.softwarelab7.fishbowl.models.Session;
 /**
  */
 public class DbHelper extends SQLiteOpenHelper {
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 3;
     public static final String DATABASE_NAME = "Fishbowl.db";
 
     private SQLiteDatabase db;
@@ -32,7 +32,7 @@ public class DbHelper extends SQLiteOpenHelper {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
         db.execSQL(Schema.Sale.DELETE_TABLE);
-        db.execSQL(Schema.Session.CREATE_TABLE);
+        db.execSQL(Schema.Session.DELETE_TABLE);
         onCreate(db);
     }
 
