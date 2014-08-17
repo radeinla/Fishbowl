@@ -28,7 +28,6 @@ public class Schema {
         public static final String[] SELECT_SALE_COLUMNS = new String[] {
                 _ID,
                 COLUMN_NAME_SESSION,
-                COLUMN_NAME_LOCATION,
                 COLUMN_NAME_LATITUDE,
                 COLUMN_NAME_LONGITUDE,
                 COLUMN_NAME_TIMESTAMP
@@ -58,13 +57,20 @@ public class Schema {
 
         public static com.softwarelab7.fishbowl.models.Sale toTransaction(Cursor cursor) {
             com.softwarelab7.fishbowl.models.Sale sale = new com.softwarelab7.fishbowl.models.Sale();
-            sale.id = cursor.getLong(cursor.getColumnIndex(_ID));
-            sale.session = cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_SESSION));
-            sale.location = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_LOCATION));
-            sale.lat = cursor.getDouble(cursor.getColumnIndex(COLUMN_NAME_LATITUDE));
-            sale.lon = cursor.getDouble(cursor.getColumnIndex(COLUMN_NAME_LONGITUDE));
-            sale.dateCreated = new Date(cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_TIMESTAMP)));
-            return null;
+            for (int i = 0; i < cursor.getColumnCount(); i++) {
+                if (cursor.getColumnName(i).equals(_ID)) {
+                    sale.id = cursor.getLong(i);
+                } else if (cursor.getColumnName(i).equals(COLUMN_NAME_SESSION)) {
+                    sale.session = cursor.getLong(i);
+                } else if (cursor.getColumnName(i).equals(COLUMN_NAME_LATITUDE)) {
+                    sale.lat = cursor.getDouble(i);
+                } else if (cursor.getColumnName(i).equals(COLUMN_NAME_LONGITUDE)) {
+                    sale.lon = cursor.getDouble(i);
+                } else if (cursor.getColumnName(i).equals(COLUMN_NAME_TIMESTAMP)) {
+                    sale.dateCreated = new Date(cursor.getLong(i));
+                }
+            }
+            return sale;
         }
 
 //        public static long insert(com.softwarelab7.cancardrivenow.models.Car car, SQLiteDatabase db) {
@@ -103,6 +109,9 @@ public class Schema {
 
         public static ContentValues createContentValues(com.softwarelab7.fishbowl.models.Session session) {
             ContentValues contentValues = new ContentValues();
+            if (session.id != null) {
+                contentValues.put(_ID, session.id);
+            }
             contentValues.put(COLUMN_NAME_ACTIVE, session.active);
             return contentValues;
         }

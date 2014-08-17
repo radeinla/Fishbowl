@@ -4,5 +4,6 @@
     <string name="app_name">Fishbowl</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="location_updating_label">Updating location..</string>
 
 </resources>

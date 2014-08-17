@@ -17,7 +17,7 @@ import java.util.Locale;
 /**
  */
 public class DbHelper extends SQLiteOpenHelper {
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 3;
     public static final String DATABASE_NAME = "Fishbowl.db";
 
     private SQLiteDatabase db;
@@ -39,7 +39,7 @@ public class DbHelper extends SQLiteOpenHelper {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
         db.execSQL(Schema.Sale.DELETE_TABLE);
-        db.execSQL(Schema.Session.CREATE_TABLE);
+        db.execSQL(Schema.Session.DELETE_TABLE);
         onCreate(db);
     }
 
@@ -69,6 +69,18 @@ public class DbHelper extends SQLiteOpenHelper {
             cursor.moveToFirst();
             return Schema.Session.toSession(cursor);
         }
+    }
+
+    public Session closeCurrentSession(Session activeSession) {
+        if (activeSession != null) {
+            activeSession.active = false;
+            update(activeSession);
+        }
+        return getLatestSession();
+    }
+
+    public int update(Session session) {
+        return db.update(Schema.Session.TABLE_NAME, Schema.Session.createContentValues(session), Schema.Session._ID+"="+session.id, null);
     }
 
     public long getSoldForSession(Session session) {
@@ -116,5 +128,4 @@ public class DbHelper extends SQLiteOpenHelper {
             return sales;
         }
     }
-
 }
