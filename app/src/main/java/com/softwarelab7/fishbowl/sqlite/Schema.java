@@ -103,6 +103,9 @@ public class Schema {
 
         public static ContentValues createContentValues(com.softwarelab7.fishbowl.models.Session session) {
             ContentValues contentValues = new ContentValues();
+            if (session.id != null) {
+                contentValues.put(_ID, session.id);
+            }
             contentValues.put(COLUMN_NAME_ACTIVE, session.active);
             return contentValues;
         }

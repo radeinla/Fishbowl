@@ -64,6 +64,18 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
+    public Session closeCurrentSession(Session activeSession) {
+        if (activeSession != null) {
+            activeSession.active = false;
+            update(activeSession);
+        }
+        return getLatestSession();
+    }
+
+    public int update(Session session) {
+        return db.update(Schema.Session.TABLE_NAME, Schema.Session.createContentValues(session), Schema.Session._ID+"="+session.id, null);
+    }
+
     public long getSoldForSession(Session session) {
         Cursor cursor = db.rawQuery("select count("+ Schema.Sale._ID+") " +
                         "from "+ Schema.Sale.TABLE_NAME+" " +
@@ -83,5 +95,7 @@ public class DbHelper extends SQLiteOpenHelper {
             return Schema.Sale.toTransaction(cursor);
         }
     }
+
+
 
 }

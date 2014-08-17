@@ -5,7 +5,7 @@ import java.util.Date;
 /**
  */
 public class Sale {
-    public long id;
+    public Long id;
     public long session;
     public String location;
     public double lat;

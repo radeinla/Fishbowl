@@ -25,6 +25,7 @@ import com.softwarelab7.fishbowl.models.Session;
 import com.softwarelab7.fishbowl.sqlite.DbHelper;
 
 import java.io.IOException;
+import java.sql.Time;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -55,6 +56,7 @@ public class Sell extends Activity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "Starting application!!!!");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sell);
         dbHelper = new DbHelper(getApplicationContext());
@@ -100,11 +102,13 @@ public class Sell extends Activity implements
 
     private void initializeContentView() {
         activeSession = dbHelper.getLatestSession();
-        setSold(dbHelper.getSoldForSession(activeSession));
         Sale latestTransaction = dbHelper.getLatestTransaction();
         if (latestTransaction != null) {
+            lat = latestTransaction.lat;
+            lon = latestTransaction.lon;
             setLocation(latestTransaction.location);
         }
+        setSold(dbHelper.getSoldForSession(activeSession));
     }
 
     private Sale createSale() {
@@ -123,11 +127,17 @@ public class Sell extends Activity implements
 
     @Override
     public void onConnected(Bundle bundle) {
+        Log.d(TAG, "GooPS connected!");
         if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS) {
             LocationRequest locationRequest = LocationRequest.create()
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                     .setSmallestDisplacement(LOCATION_CHANGE_THRESHOLD)
-                    .setInterval(TimeUnit.MINUTES.toMillis(10));
+                    .setInterval(TimeUnit.MINUTES.toMillis(5))
+                    .setFastestInterval(TimeUnit.MINUTES.toMillis(5));
+            //uncomment when debugging
+            locationRequest.setInterval(5000);
+            locationRequest.setFastestInterval(1000);
+            Log.d(TAG, "interval check: " + locationRequest.getInterval() + ", fastest: " + locationRequest.getFastestInterval());
             Log.d(TAG, "Expiration! " + locationRequest.getExpirationTime());
             mLocationClient.requestLocationUpdates(locationRequest, this);
             Location currentLocation = mLocationClient.getLastLocation();
@@ -135,13 +145,14 @@ public class Sell extends Activity implements
                 this.onLocationChanged(currentLocation);
             }
         } else {
+            Log.d(TAG, "GooPS not connected!");
             Toast.makeText(this, "GPS not available. Please install GooglePlayServices and enable GPS.", Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
     public void onDisconnected() {
-
+        Log.d(TAG, "GooPS disconnected!");
     }
 
     @Override
@@ -175,6 +186,9 @@ public class Sell extends Activity implements
 
     @Override
     protected void onStop() {
+        if (mLocationClient.isConnected()) {
+            mLocationClient.removeLocationUpdates(this);
+        }
         mLocationClient.disconnect();
         super.onStop();
     }
@@ -182,9 +196,11 @@ public class Sell extends Activity implements
     @Override
     public void onLocationChanged(Location location) {
         Log.d(TAG, "Location changed!!!!!");
+        Toast.makeText(this, "You have moved, creating new session!", Toast.LENGTH_SHORT).show();
         if (location.distanceTo(getCurrentLocation()) > LOCATION_CHANGE_THRESHOLD) {
             lat = location.getLatitude();
             lon = location.getLongitude();
+            setLocation("Updating Location..");
             if (lastAsyncAddressTask != null) {
                 lastAsyncAddressTask.cancel(true);
             }
@@ -200,6 +216,8 @@ public class Sell extends Activity implements
                 }
             };
             lastAsyncAddressTask.execute(location);
+            activeSession = dbHelper.closeCurrentSession(activeSession);
+            setSold(0);
         }
     }
 
