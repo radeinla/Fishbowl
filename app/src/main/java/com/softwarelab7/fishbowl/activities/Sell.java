@@ -191,13 +191,23 @@ public class Sell extends Activity implements
             }
             long dayDifference = TimeUnit.MILLISECONDS.toDays(request.getTime()-from.getTime());
             double locationDifference = Haversine.haversine(requestLocation.getLatitude(), requestLocation.getLongitude(), lat, lon);
-            score += (((double)sold)/(to.getTime()-from.getTime())) * 0.4;
-            score += ((double)sameWeekDayType) * 0.8;
-            score += ((double)dayDifference) * 0.2;
-            if (locationDifference < 10) {
-                score -= locationDifference * 0.3;
+            double soldPerHour = ((double)sold)/(TimeUnit.MILLISECONDS.toHours(to.getTime()-from.getTime()));
+            if (soldPerHour < 10) {
+                score += 0.2;
+            } else if (soldPerHour < 100) {
+                score += 0.5;
             } else {
-                score += locationDifference * 0.3;
+                score += 0.9;
+            }
+            score += ((double)sameWeekDayType) * 0.8;
+            score += ((double)((30-dayDifference)/30)) * 0.2;
+            Log.d(TAG, "locationDifference raw value" + locationDifference);
+            if (locationDifference < 20) {
+                score -= 0.5;
+            } else if (locationDifference < 200) {
+                score += 0.5;
+            } else {
+                score -= 0.4;
             }
             return score;
         }
@@ -369,7 +379,8 @@ public class Sell extends Activity implements
 
     @Override
     protected void onStop() {
-        suggestionToasterTimer.cancel();
+        Log.d(TAG, "Shtopping shiz!");
+        suggestionToasterTimer.purge();
         if (mLocationClient.isConnected()) {
             mLocationClient.removeLocationUpdates(this);
         }
@@ -379,11 +390,10 @@ public class Sell extends Activity implements
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d(TAG, "Location changed!!!!!");
-        Toast.makeText(this, "You have moved, creating new session!", Toast.LENGTH_SHORT).show();
         if (location.distanceTo(getCurrentLocation()) > LOCATION_CHANGE_THRESHOLD) {
+            Toast.makeText(this, "You have moved, creating new session!", Toast.LENGTH_SHORT).show();
             closeCurrentSession();
-            setStops(stops+1);
+            setStops(stops + 1);
             setCoordinates(location.getLatitude(), location.getLongitude());
             suggestionToasterTimer.schedule(new SuggestLocationToasterTimerTask(), 0);
         }

@@ -146,7 +146,7 @@ public class DbHelper extends SQLiteOpenHelper {
 //        calendar.set(Calendar.SECOND, 0);
 //        calendar.set(Calendar.MINUTE, 0);
 //        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        Date tmb = new Date(new Date().getTime()- TimeUnit.MINUTES.toMillis(30));
+        Date tmb = new Date(new Date().getTime()- TimeUnit.MINUTES.toMillis(10));
         calendar.setTime(tmb);
 
         Cursor cursor = db.rawQuery("select * " +
