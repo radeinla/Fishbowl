@@ -23,8 +23,13 @@ import com.softwarelab7.fishbowl.R;
 import com.softwarelab7.fishbowl.models.Sale;
 import com.softwarelab7.fishbowl.models.Session;
 import com.softwarelab7.fishbowl.sqlite.DbHelper;
+import com.softwarelab7.fishbowl.utils.Haversine;
+import com.softwarelab7.fishbowl.utils.LocationUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -99,47 +104,109 @@ public class Sell extends Activity implements
         return super.onOptionsItemSelected(item);
     }
 
-    private String extractNextLocation (Date timeOfNotification) {
+    private Location extractNextLocation (Date timeOfNotification, Location location) {
         if (timeOfNotification == null) {
             timeOfNotification = new Date();
         }
 
         List <Sale> saleList = dbHelper.getPastSales();
-        HashMap<Long, List<Sale>> salesBySession = new HashMap<Long, List<Sale>>();
 
-        for (int i = 0; i < saleList.size(); i++) {
-            Sale sale = saleList.get(i);
-            List<Sale> sales = salesBySession.get(sale.session);
-            if (sales == null) {
-                sales = new ArrayList<Sale>();
+        if (saleList.size()> 0) {
+            HashMap<Long, List<Sale>> salesBySession = new HashMap<Long, List<Sale>>();
+
+            for (int i = 0; i < saleList.size(); i++) {
+                Sale sale = saleList.get(i);
+                List<Sale> sales = salesBySession.get(sale.session);
+                if (sales == null) {
+                    sales = new ArrayList<Sale>();
+                }
+                sales.add(sale);
+                salesBySession.put(sale.session, sales);
             }
-            sales.add(sale);
-            salesBySession.put(sale.session, sales);
-        }
 
-        HashMap<Long, Map> salesByTimeRange = new HashMap<Long, Map>();
+            List<SessionData> allSalesData = new ArrayList<SessionData>();
 
-        for (HashMap.Entry<Long, List<Sale>> entry : salesBySession.entrySet()) {
-            Long sessionId = entry.getKey();
-            List <Sale> sales = entry.getValue();
+            for (HashMap.Entry<Long, List<Sale>> entry : salesBySession.entrySet()) {
+                Long sessionId = entry.getKey();
+                List<Sale> sales = entry.getValue();
+                SessionData sessionData = new SessionData();
+                sessionData.request = timeOfNotification;
+                sessionData.requestLocation = location;
+                sessionData.sold = sales.size();
 
-            Date min = null;
-            Date max = null;
+                //because that is the location where you got your first sale on that session..
+                Sale firstSale = sales.get(0);
+                sessionData.sessionId = sessionId;
+                sessionData.lat = firstSale.lat;
+                sessionData.lon = firstSale.lon;
 
-            for (int i = 0; i < sales.size(); i++) {
-                Sale sale = sales.get(i);
 
-                if (min == null || sale.dateCreated.compareTo(min) < 0) {
-                    min = sale.dateCreated;
+                for (int i = 0; i < sales.size(); i++) {
+                    Sale sale = sales.get(i);
+
+                    if (sessionData.from == null || sale.dateCreated.compareTo(sessionData.from) < 0) {
+                        sessionData.from = sale.dateCreated;
+                    }
+
+                    if (sessionData.to == null || sale.dateCreated.compareTo(sessionData.to) > 0) {
+                        sessionData.to = sale.dateCreated;
+                    }
                 }
 
-                if (max == null || sale.dateCreated.compareTo(max) > 0) {
-                    max = sale.dateCreated;
-                }
+                allSalesData.add(sessionData);
+            }
+            Collections.sort(allSalesData);
+            SessionData best = allSalesData.get(allSalesData.size()-1);
+            Log.d(TAG, "Sold here: " + best.sold);
+            return LocationUtils.createLocation(best.lat, best.lon);
+        } else {
+            return null;
+        }
+    }
+
+    private class SessionData implements Comparable<SessionData> {
+        Date request;
+        Location requestLocation;
+        Date from;
+        Date to;
+        long sessionId;
+        double lat;
+        double lon;
+        long sold;
+
+        double getScore() {
+            double score = 0;
+            int sameWeekDayType = 0;
+            if (getWeekDayType(getDayOfWeek(request)) == getWeekDayType(getDayOfWeek(from))) {
+                sameWeekDayType = 1;
+            }
+            long dayDifference = TimeUnit.MILLISECONDS.toDays(request.getTime()-from.getTime());
+            double locationDifference = Haversine.haversine(requestLocation.getLatitude(), requestLocation.getLongitude(), lat, lon);
+            score += (((double)sold)/(to.getTime()-from.getTime())) * 0.4;
+            score += ((double)sameWeekDayType) * 0.8;
+            score += ((double)dayDifference) * 0.2;
+            score += locationDifference * 0.3;
+            return score;
+        }
+
+        int getDayOfWeek(Date date) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(from);
+            return calendar.get(Calendar.DAY_OF_WEEK);
+        }
+
+        int getWeekDayType(int dayOfWeek) {
+            if (dayOfWeek == Calendar.SUNDAY || dayOfWeek == Calendar.SATURDAY) {
+                return 0;
+            } else {
+                return 1;
             }
         }
 
-        return "Hello";
+        @Override
+        public int compareTo(SessionData rhs) {
+            return Double.compare(this.getScore(), rhs.getScore());
+        }
     }
 
     private void setSold(long sold) {
@@ -160,6 +227,7 @@ public class Sell extends Activity implements
         }
         setSold(dbHelper.getSoldForSession(activeSession));
         setDate(new Date());
+        Log.d(TAG, "New location: " + LocationUtils.toCoordinateString(extractNextLocation(this.date, getCurrentLocation())));
     }
 
     private void setCoordinates(double lat, double lon) {
@@ -272,7 +340,8 @@ public class Sell extends Activity implements
         lastAsyncAddressTask = new AsyncTask<Location,Void,Address>() {
             @Override
             protected void onPostExecute(Address address) {
-                setLocation(getLocationFromAddress(address));
+                String locationFromAddress = getLocationFromAddress(address);
+                setLocation(Sell.this.getString(R.string.sold_in_label, locationFromAddress));
             }
 
             @Override
@@ -302,15 +371,12 @@ public class Sell extends Activity implements
     }
 
     private String getCoordinateString() {
-        return "("+lat+","+lon+")";
+        return LocationUtils.toCoordinateString(lat, lon);
     }
 
     private Location getCurrentLocation() {
-        Location location = new Location(Sell.class.getSimpleName());
         Log.d(TAG, "Current location: " + getCoordinateString());
-        location.setLatitude(lat);
-        location.setLongitude(lon);
-        return location;
+        return LocationUtils.createLocation(lat, lon);
     }
 
     private Address getAddress(Location location) {
