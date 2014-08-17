@@ -194,7 +194,11 @@ public class Sell extends Activity implements
             score += (((double)sold)/(to.getTime()-from.getTime())) * 0.4;
             score += ((double)sameWeekDayType) * 0.8;
             score += ((double)dayDifference) * 0.2;
-            score += locationDifference * 0.3;
+            if (locationDifference < 10) {
+                score -= locationDifference * 0.3;
+            } else {
+                score += locationDifference * 0.3;
+            }
             return score;
         }
 
