@@ -253,9 +253,6 @@ public class Sell extends Activity implements
                 Sell.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-//                        Toast.makeText(Sell.this,
-//                                Sell.this.getString(R.string.new_location_suggestion_toast, suggestedLocationName),
-//                                Toast.LENGTH_LONG).show();
                         TextView suggestionTextView = (TextView) Sell.this.findViewById(R.id.suggestion);
                         String suggestion = Sell.this.getString(R.string.new_location_suggestion_text,
                                 suggestedLocationName);
@@ -352,7 +349,6 @@ public class Sell extends Activity implements
     @Override
     protected void onResume() {
         super.onResume();
-        initializeContentView();
     }
 
     @Override
