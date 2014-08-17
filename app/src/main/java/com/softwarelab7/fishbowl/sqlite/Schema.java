@@ -97,11 +97,13 @@ public class Schema {
     public static abstract class Session implements BaseColumns {
         public static final String TABLE_NAME = "session";
         public static final String COLUMN_NAME_ACTIVE = "active";
+        public static final String COLUMN_NAME_DATE_CREATED = "dateCreated";
 
         public static final String CREATE_TABLE =
                 "CREATE TABLE " + TABLE_NAME + " (" +
                         _ID + INTEGER_TYPE + " PRIMARY KEY," +
-                        COLUMN_NAME_ACTIVE + INTEGER_TYPE +
+                        COLUMN_NAME_ACTIVE + INTEGER_TYPE + COMMA_SEP +
+                        COLUMN_NAME_DATE_CREATED + INTEGER_TYPE +
                         " )";
 
         public static final String DELETE_TABLE =
@@ -109,7 +111,12 @@ public class Schema {
 
         public static ContentValues createContentValues(com.softwarelab7.fishbowl.models.Session session) {
             ContentValues contentValues = new ContentValues();
-            if (session.id != null) {
+            if (session.id == null) {
+                if (session.dateCreated == null) {
+                    session.dateCreated = new Date();
+                }
+                contentValues.put(COLUMN_NAME_DATE_CREATED, session.dateCreated.getTime());
+            } else {
                 contentValues.put(_ID, session.id);
             }
             contentValues.put(COLUMN_NAME_ACTIVE, session.active);

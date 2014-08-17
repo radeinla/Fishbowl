@@ -67,6 +67,8 @@ public class Sell extends Activity implements
     DbHelper dbHelper;
     Session activeSession;
     long sold = 0;
+    long stops = 0;
+    long soldToday = 0;
     String location;
     Double lat = 14.6549;
     Double lon = 121.0645;
@@ -82,7 +84,6 @@ public class Sell extends Activity implements
         setContentView(R.layout.activity_sell);
         dbHelper = new DbHelper(getApplicationContext());
         mLocationClient = new LocationClient(this, this, this);
-        initializeContentView();
         findViewById(R.id.sale).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -90,6 +91,7 @@ public class Sell extends Activity implements
                 dbHelper.insert(createSale());
             }
         });
+        initializeContentView();
     }
 
     @Override
@@ -232,22 +234,31 @@ public class Sell extends Activity implements
         if (latestTransaction != null) {
             setCoordinates(latestTransaction.lat, latestTransaction.lon);
         }
-        setSold(dbHelper.getSoldForSession(activeSession));
         setDate(new Date());
+        setSold(dbHelper.getSoldForSession(activeSession));
+        setSoldToday(dbHelper.getSoldForToday(this.date));
+        setStops(dbHelper.getStopsForToday(this.date));
         suggestionToasterTimer = new Timer();
         suggestionToaster = new SuggestLocationToasterTimerTask();
-        suggestionToaster.location = getCurrentLocation();
-        suggestionToaster.date = new Date();
         suggestionToasterTimer.schedule(suggestionToaster, 0, SUGGESTION_PERIOD);
     }
 
+    void setStops(long stops) {
+        this.stops = stops;
+        ((TextView)findViewById(R.id.stops)).setText(Long.toString(stops));
+    }
+
+    void setSoldToday(long soldToday) {
+        this.soldToday = soldToday;
+        ((TextView)findViewById(R.id.soldToday)).setText(Long.toString(soldToday));
+    }
+
     private class SuggestLocationToasterTimerTask extends TimerTask {
-        Location location;
         Date date;
 
         @Override
         public void run() {
-            final Location suggestedLocation = extractNextLocation(date, location);
+            final Location suggestedLocation = extractNextLocation(Sell.this.date, getCurrentLocation());
             if (suggestedLocation != null) {
                 final String suggestedLocationName = getLocationFromAddress(getAddress(suggestedLocation));
                 Sell.this.runOnUiThread(new Runnable() {
@@ -281,6 +292,7 @@ public class Sell extends Activity implements
 
     private void increaseSoldCount() {
         setSold(sold+1);
+        setSoldToday(soldToday+1);
     }
 
     @Override
@@ -367,6 +379,7 @@ public class Sell extends Activity implements
         Toast.makeText(this, "You have moved, creating new session!", Toast.LENGTH_SHORT).show();
         if (location.distanceTo(getCurrentLocation()) > LOCATION_CHANGE_THRESHOLD) {
             closeCurrentSession();
+            setStops(stops+1);
             setCoordinates(location.getLatitude(), location.getLongitude());
         }
     }
@@ -454,6 +467,7 @@ public class Sell extends Activity implements
     private void closeCurrentSession() {
         activeSession = dbHelper.closeCurrentSession(activeSession);
         setSold(0);
+        setStops(this.stops+1);
     }
 
     private Date getDateOnly(Date date) {
