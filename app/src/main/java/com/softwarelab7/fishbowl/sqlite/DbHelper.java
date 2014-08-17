@@ -5,7 +5,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.softwarelab7.fishbowl.models.Sale;
 import com.softwarelab7.fishbowl.models.Session;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 /**
  */
@@ -65,10 +72,11 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public long getSoldForSession(Session session) {
-        Cursor cursor = db.rawQuery("select count("+ Schema.Sale._ID+") " +
-                        "from "+ Schema.Sale.TABLE_NAME+" " +
-                        "where "+ Schema.Sale.COLUMN_NAME_SESSION+" = " + session.id + ";",
-                null);
+        Cursor cursor = db.rawQuery("select count(" + Schema.Sale._ID + ") " +
+                        "from " + Schema.Sale.TABLE_NAME + " " +
+                        "where " + Schema.Sale.COLUMN_NAME_SESSION + " = " + session.id + ";",
+                null
+        );
         cursor.moveToFirst();
         return cursor.getLong(0);
     }
@@ -81,6 +89,31 @@ public class DbHelper extends SQLiteOpenHelper {
         } else {
             cursor.moveToFirst();
             return Schema.Sale.toTransaction(cursor);
+        }
+    }
+
+    public List <com.softwarelab7.fishbowl.models.Sale> getPastSales() {
+        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+
+        Cursor cursor = db.rawQuery("select * " +
+                        "from " + Schema.Sale.TABLE_NAME + " " +
+                        "where " + Schema.Sale.COLUMN_NAME_TIMESTAMP + " < " + calendar.getTime().getTime() + ";",
+                null
+        );
+        if (cursor.isAfterLast()) {
+            return new ArrayList<Sale>();
+        } else {
+            List<Sale> sales = new ArrayList<Sale>();
+            cursor.moveToFirst();
+            while(!cursor.isAfterLast()) {
+                sales.add(Schema.Sale.toTransaction(cursor));
+                cursor.moveToNext();
+            }
+            return sales;
         }
     }
 
