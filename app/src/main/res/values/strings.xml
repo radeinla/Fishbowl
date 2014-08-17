@@ -5,5 +5,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="location_updating_label">Updating location..</string>
+    <string name="sold_in_label">Total sold in %1$s</string>
+    <string name="sold_today_label">Total sold today</string>
+    <string name="stops_label">Selling stops today</string>
 
 </resources>

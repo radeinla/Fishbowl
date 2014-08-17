@@ -8,76 +8,110 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".Sell">
 
-    <RelativeLayout
+    <ImageButton
         android:id="@+id/sale"
         android:layout_width="240dp"
         android:layout_height="240dp"
         android:layout_centerInParent="true"
         android:background="#ffffdd55"
         android:layout_alignParentTop="false">
-        <ImageButton
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:id="@+id/soldOut"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentRight="false"
-            android:layout_alignParentLeft="true"
-            android:contentDescription="Sold out button"
-            android:background="#ffff4f29" />
-        <TextView
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:text="55"
-            android:id="@+id/sold"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentLeft="false"
-            android:layout_alignParentRight="true"
-            android:textSize="50dp"
-            android:textIsSelectable="false"
-            android:background="#ff8eff7b" />
-    </RelativeLayout>
+    </ImageButton>
 
-    <TextView
-        android:layout_width="150dp"
-        android:layout_height="60dp"
-        android:text="@string/location_updating_label"
-        android:id="@+id/location"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:textSize="20dp"
-        android:background="#ff696fff"
-        android:textAlignment="gravity"
-        android:gravity="center_vertical|center_horizontal" />
-
-    <RelativeLayout
-        android:layout_width="140dp"
-        android:layout_height="60dp"
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:background="#fffc8bff">
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33">
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="35"
+                android:id="@+id/sold"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:textSize="50dp"
+                android:textIsSelectable="false"
+                android:background="#ff8eff7b"
+                android:textAlignment="gravity"
+                android:gravity="right" />
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/location_updating_label"
+                android:id="@+id/location"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:textSize="12dp"
+                android:background="#ff696fff"
+                android:textAlignment="gravity"
+                android:gravity="center_vertical|center_horizontal" />
+        </RelativeLayout>
 
-        <TextView
-            android:layout_width="40dp"
-            android:layout_height="60dp"
-            android:text="P"
-            android:id="@+id/currency"
-            android:layout_centerVertical="true"
-            android:layout_alignParentRight="false"
-            android:layout_alignParentEnd="true"
-            android:textSize="50dp"
-            android:layout_alignParentLeft="true" />
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33">
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="104"
+                android:id="@+id/soldToday"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:textSize="50dp"
+                android:textIsSelectable="false"
+                android:background="#ff8eff7b"
+                android:textAlignment="gravity"
+                android:gravity="right" />
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/sold_today_label"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:textSize="12dp"
+                android:background="#ff696fff"
+                android:textAlignment="gravity"
+                android:gravity="center_vertical|center_horizontal" />
+        </RelativeLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="60dp"
-            android:text="100"
-            android:id="@+id/subtotal"
-            android:layout_alignParentRight="true"
-            android:textSize="50dp"
-            android:layout_marginRight="10dp" />
-    </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33">
+            <TextView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:text="4"
+                android:id="@+id/stops"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:textSize="50dp"
+                android:textIsSelectable="false"
+                android:background="#ff8eff7b"
+                android:textAlignment="gravity"
+                android:gravity="right" />
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/stops_label"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:textSize="12dp"
+                android:background="#ff696fff"
+                android:textAlignment="gravity"
+                android:gravity="center_vertical|center_horizontal" />
+        </RelativeLayout>
+    </LinearLayout>
 
 </RelativeLayout>
