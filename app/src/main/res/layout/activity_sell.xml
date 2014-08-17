@@ -144,14 +144,20 @@
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="#fff"
+            android:textSize="11sp"
+            android:textStyle="bold"
             android:text="@string/new_location_suggestion_label"
-            android:id="@+id/suggestion_label" />
+            android:id="@+id/suggestion_label"
+            android:layout_marginTop="5dp"/>
 
         <TextView
             android:layout_below="@+id/suggestion_label"
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="#fff"
+            android:textSize="13sp"
             android:text="@string/new_location_no_suggestion_text"
             android:id="@+id/suggestion" />
 
