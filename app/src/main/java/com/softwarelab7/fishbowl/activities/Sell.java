@@ -37,7 +37,11 @@ public class Sell extends Activity implements
         GooglePlayServicesClient.OnConnectionFailedListener,
         com.google.android.gms.location.LocationListener {
 
-    private final static float LOCATION_CHANGE_THRESHOLD = 20.0f;
+    private static float LOCATION_CHANGE_THRESHOLD = 30.0f;
+
+    private static long LOCATION_CHANGE_INTERVAL = TimeUnit.MINUTES.toMillis(5);
+
+    private static long LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.MINUTES.toMillis(5);
 
     private final static int
             CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -129,14 +133,17 @@ public class Sell extends Activity implements
     public void onConnected(Bundle bundle) {
         Log.d(TAG, "GooPS connected!");
         if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS) {
+
+            //uncomment when debugging
+            LOCATION_CHANGE_THRESHOLD = 5.0f; // 5 meters
+            LOCATION_CHANGE_INTERVAL = TimeUnit.SECONDS.toMillis(30); // actively check for location updates every 2 minutes
+            LOCATION_CHANGE_FASTEST_INTERVAL = TimeUnit.SECONDS.toMillis(30); // fastest interval is 2 minutes
+
             LocationRequest locationRequest = LocationRequest.create()
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                     .setSmallestDisplacement(LOCATION_CHANGE_THRESHOLD)
-                    .setInterval(TimeUnit.MINUTES.toMillis(5))
-                    .setFastestInterval(TimeUnit.MINUTES.toMillis(5));
-            //uncomment when debugging
-            locationRequest.setInterval(5000);
-            locationRequest.setFastestInterval(1000);
+                    .setInterval(LOCATION_CHANGE_INTERVAL)
+                    .setFastestInterval(LOCATION_CHANGE_FASTEST_INTERVAL);
             Log.d(TAG, "interval check: " + locationRequest.getInterval() + ", fastest: " + locationRequest.getFastestInterval());
             Log.d(TAG, "Expiration! " + locationRequest.getExpirationTime());
             mLocationClient.requestLocationUpdates(locationRequest, this);
