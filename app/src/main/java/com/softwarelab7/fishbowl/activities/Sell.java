@@ -12,7 +12,11 @@ import com.softwarelab7.fishbowl.models.Sale;
 import com.softwarelab7.fishbowl.models.Session;
 import com.softwarelab7.fishbowl.sqlite.DbHelper;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class Sell extends Activity {
@@ -56,6 +60,49 @@ public class Sell extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private String extractNextLocation (Date timeOfNotification) {
+        if (timeOfNotification == null) {
+            timeOfNotification = new Date();
+        }
+
+        List <Sale> saleList = dbHelper.getPastSales();
+        HashMap<Long, List<Sale>> salesBySession = new HashMap<Long, List<Sale>>();
+
+        for (int i = 0; i < saleList.size(); i++) {
+            Sale sale = saleList.get(i);
+            List<Sale> sales = salesBySession.get(sale.session);
+            if (sales == null) {
+                sales = new ArrayList<Sale>();
+            }
+            sales.add(sale);
+            salesBySession.put(sale.session, sales);
+        }
+
+        HashMap<Long, Map> salesByTimeRange = new HashMap<Long, Map>();
+
+        for (HashMap.Entry<Long, List<Sale>> entry : salesBySession.entrySet()) {
+            Long sessionId = entry.getKey();
+            List <Sale> sales = entry.getValue();
+
+            Date min = null;
+            Date max = null;
+
+            for (int i = 0; i < sales.size(); i++) {
+                Sale sale = sales.get(i);
+
+                if (min == null || sale.dateCreated.compareTo(min) < 0) {
+                    min = sale.dateCreated;
+                }
+
+                if (max == null || sale.dateCreated.compareTo(max) > 0) {
+                    max = sale.dateCreated;
+                }
+            }
+        }
+
+        return "Hello";
     }
 
     private void setSold(long sold) {
